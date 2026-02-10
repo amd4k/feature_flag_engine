@@ -17,9 +17,16 @@ class Admin::FeaturesController < ApplicationController
   end
 
   def edit
+    @feature = Feature.find(params[:id])
   end
 
   def update
+    @feature = Feature.find(params[:id])
+    if @feature.update(feature_params)
+      redirect_to admin_features_path, notice: "Feature updated successfully"
+    else
+      render :edit, status: :unprocessable_entity
+    end
   end
 
   private

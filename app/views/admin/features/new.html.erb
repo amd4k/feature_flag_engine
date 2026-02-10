@@ -1,8 +1,5 @@
-<h1>Admin::Features#new</h1>
-<p>Find me in app/views/admin/features/new.html.erb</p>
-
 <%= form_with model: [:admin, @feature] do |f| %>
-  <% if @feature.errors.any?%>
+  <% if @feature.errors.any? %>
     <div>
       <% @feature.errors.full_messages.each do |msg| %>
         <p style="color: red">
@@ -10,10 +7,8 @@
         </p>
       <% end %>  
     </div>
-  <% end%>
+  <% end %>
   
-  
-
   <div>
     <%= f.label :key %>
     <br>
@@ -30,4 +25,5 @@
   <div>
     <%= f.submit "Create Feature" %>
   </div>
+
 <% end %>
