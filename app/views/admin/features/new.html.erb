@@ -1,0 +1,33 @@
+<h1>Admin::Features#new</h1>
+<p>Find me in app/views/admin/features/new.html.erb</p>
+
+<%= form_with model: [:admin, @feature] do |f| %>
+  <% if @feature.errors.any?%>
+    <div>
+      <% @feature.errors.full_messages.each do |msg| %>
+        <p style="color: red">
+          <%= msg %>
+        </p>
+      <% end %>  
+    </div>
+  <% end%>
+  
+  
+
+  <div>
+    <%= f.label :key %>
+    <br>
+    <%= f.text_field :key %>
+  </div>
+
+  <div>
+    <%= f.label :default_enabled %>
+    <%= f.check_box :default_enabled %>
+  </div>
+  
+  <br>
+
+  <div>
+    <%= f.submit "Create Feature" %>
+  </div>
+<% end %>

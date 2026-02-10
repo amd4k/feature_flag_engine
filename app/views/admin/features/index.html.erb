@@ -1,0 +1,24 @@
+<h1>Feature Flags</h1>
+<p>
+  <%= link_to "New Feature", new_admin_feature_path %>
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Key</th>
+      <th>Default Enabled</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @features.each do |feature|%>
+      <tr>
+        <td> <%= feature.key %> </td>
+        <td> <%= feature.default_enabled? ? "Yes" : "No" %>  </td>
+        <td> <%= link_to "Edit", edit_admin_feature_path(feature) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
