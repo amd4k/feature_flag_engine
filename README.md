@@ -1,82 +1,80 @@
 # Feature Flag Engine
 
-A database-backed feature flag system that allows features to be defined, overridden, and evaluated at runtime with predictable precedence rules.
+A database backed feature flag system that allows features to be defined, overridden, and evaluated at runtime with predictable precedence rules.
 
-This project was built as a coding exercise with a focus on **correctness**, **clear separation of concerns**, and **production-style design**, rather than UI polish.
+This project was built as a coding exercise with a focus on correctness, separation of concerns, and production oriented design rather than UI polish.
 
 ---
 
-## Why Feature Flags
+## Overview
 
-Feature flags (also known as feature toggles) allow applications to enable or disable functionality at runtime without redeploying code. They are commonly used to:
+Feature flags allow applications to enable or disable functionality at runtime without redeploying code. They are commonly used to:
 
 * Roll out features gradually
 * Enable functionality for specific users or groups
 * Disable problematic features quickly
 * Experiment safely in production
 
+This implementation provides a deterministic, database backed feature flag engine with clear override precedence.
+
 ---
 
-## High-Level Design
+## Architecture
 
-The system is split into two clear layers:
+The system is split into two layers:
 
-### 1. Core Feature Flag Engine
+### Core Feature Flag Engine
 
 A pure Ruby service responsible for evaluating whether a feature is enabled for a given context.
 
-### 2. Admin Interface (Configuration Layer)
+### Admin Interface
 
-A simple Rails-based admin UI used to define features and manage overrides.
+A minimal Rails based interface used to create features and manage overrides.
 
-This separation allows the core engine to be reused by any interface (web, API, CLI, background jobs, etc.).
-
----
-
-## Feature Model
-
-Each feature flag has:
-
-* A unique `key`
-* A global default state (`default_enabled`)
-* An optional human-readable `description`
-
-The global default applies unless overridden.
+The evaluation logic is fully decoupled from controllers and views, allowing the engine to be reused by other interfaces such as APIs, background jobs, or CLI tools.
 
 ---
 
-## Override Model
+## Data Model
 
-Overrides allow feature behavior to differ for specific contexts.
+### Feature
+
+Each feature includes:
+
+* `key` (unique)
+* `default_enabled`
+* `description` (optional)
+
+The default value is used when no overrides apply.
+
+### FeatureOverride
 
 Each override includes:
 
-* `target_type` – currently supports:
+* `feature_id`
+* `target_type` (`User` or `Group`)
+* `target_identifier`
+* `enabled`
 
-  * `User`
-  * `Group`
-* `target_identifier` – the identifier for the user or group
-* `enabled` – whether the feature is enabled or disabled for that target
-
-Overrides are stored in the database and enforced with uniqueness constraints to prevent conflicting entries.
+Overrides are uniquely constrained per feature and target to prevent conflicting entries.
 
 ---
 
-## Evaluation Rules (Precedence)
+## Evaluation Precedence
 
-When evaluating a feature flag, the following precedence rules apply:
+When evaluating a feature:
 
-1. **User-specific override** (highest priority)
-2. **Group-specific override**
-3. **Global default state** (fallback)
+1. User specific override
+2. Group specific override
+3. Feature default
 
-This behavior is deterministic and explicitly enforced in the evaluation logic.
+This order is explicitly enforced in the evaluation service to guarantee predictable behavior.
 
 ---
 
-## Runtime Evaluation
+## Runtime Usage
 
-Feature evaluation is performed via a dedicated service:
+Feature evaluation is performed via:
 
 ```ruby
 FeatureFlags::Evaluator.new(
@@ -88,57 +86,53 @@ FeatureFlags::Evaluator.new(
 
 The evaluator:
 
-* Is side-effect free
-* Does not depend on UI or controllers
-* Can be called from anywhere in the application
+* Is side effect free
+* Returns a boolean
+* Can be invoked anywhere in the application
 
 ---
 
-## Admin Interface
+## Admin Capabilities
 
-The system is exposed via a **simple admin web interface**, implemented using standard Rails controllers and views.
-
-From the admin UI, you can:
+From the admin interface, you can:
 
 * Create and update feature flags
-* Toggle global default state
-* Add or remove user-specific overrides
-* Add or remove group-specific overrides
+* Toggle the global default state
+* Add or remove user overrides
+* Add or remove group overrides
 
-This satisfies the requirement to support feature mutations while keeping the core engine isolated.
+This satisfies the requirement to support runtime mutations while keeping evaluation logic isolated.
 
 ---
 
-## Validation & Error Handling
+## Validation and Safety
 
-The system validates inputs to ensure predictable behavior:
-
-* Feature keys must be unique
-* Overrides are uniquely constrained per feature + target
-* Non-existent features safely evaluate to `false`
-* Invalid operations fail explicitly rather than silently
+* Feature keys are unique
+* Overrides are uniquely constrained per feature and target
+* Missing features safely evaluate to `false`
+* Invalid operations fail explicitly
 
 ---
 
 ## Database
 
-Phase 1 uses a **database-backed implementation** with:
+The system uses:
 
 * `features` table
 * `feature_overrides` table
-* Appropriate indexes and constraints for correctness and performance
+* Indexes and constraints to ensure correctness and performance
 
 ---
 
 ## Tests
 
-Core logic is covered with unit tests focused on:
+Unit tests focus on:
 
-* Feature evaluation correctness
+* Evaluation correctness
 * Override precedence
-* Edge cases (missing features, missing overrides)
+* Edge cases such as missing features or overrides
 
-Tests are written to read like documentation for the feature flag behavior.
+Tests are written to reflect business rules rather than framework behavior.
 
 ---
 
@@ -341,45 +335,45 @@ This is the core of the system.
 ## Assumptions
 
 * User and group identifiers are treated as opaque strings
-* The feature flag engine is decoupled from application-specific user or group models
-* Admin access is assumed to be trusted (authentication is out of scope)
+* The engine is independent of application specific user or group models
+* Admin access is trusted and authentication is out of scope
 
 ---
 
 ## Tradeoffs
 
-* A simple admin UI was chosen over a REST API or CLI for clarity and ease of demonstration
-* No caching was added to keep behavior explicit and easy to reason about within the time box
-* Region-based overrides were not implemented
+* A simple web interface was chosen over a REST API or CLI for clarity
+* No caching layer was added to keep behavior explicit within the time box
+* Region based overrides were not implemented
 
 ---
 
 ## Known Limitations
 
-* No region-based overrides (Phase 2 “nice to have”)
-* No caching or memoization for high-throughput evaluation
-* Basic UI with minimal styling
-* No authentication/authorization for admin actions
+* No region based overrides
+* No caching or memoization for high throughput evaluation
+* Basic UI without authentication
 
 ---
 
-## What I’d Do Next With More Time
+## What I Would Improve Next
 
-* Add in-memory or request-scoped caching for evaluation
-* Support region-based overrides as an additional precedence layer
-* Expose a REST API for feature evaluation
+* Add request scoped or in memory caching
+* Introduce region based overrides as an additional precedence layer
+* Expose a REST API for evaluation
 * Add audit logging for override changes
-* Improve admin UI validation and UX
-* Add performance benchmarks
+* Add performance benchmarking
 
 ---
 
-## Commit History
+## References
 
-Commits were made incrementally to reflect design decisions and implementation progress, rather than squashing into a single commit.
+The following resources informed the design and approach:
 
----
+1. [https://martinfowler.com/articles/feature-toggles.html](https://martinfowler.com/articles/feature-toggles.html)
+2. [https://developer.atlassian.com/platform/forge/feature-flags/concepts/](https://developer.atlassian.com/platform/forge/feature-flags/concepts/)
+3. [https://12factor.net/config](https://12factor.net/config)
+4. [https://www.flippercloud.io/docs/optimization](https://www.flippercloud.io/docs/optimization)
+5. [https://blog.cloud66.com/how-to-add-feature-flags-to-your-ruby-on-rails-applications](https://blog.cloud66.com/how-to-add-feature-flags-to-your-ruby-on-rails-applications)
+6. [https://dev.to/ackshaey/feature-flags-in-rails-how-to-roll-out-and-manage-your-features-like-a-pro-1l7](https://dev.to/ackshaey/feature-flags-in-rails-how-to-roll-out-and-manage-your-features-like-a-pro-1l7)
 
-## Final Notes
-
-This project prioritizes **correct behavior**, **predictable evaluation**, and **clean design** over UI polish, in line with the challenge goals.
