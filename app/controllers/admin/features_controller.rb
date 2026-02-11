@@ -18,6 +18,8 @@ class Admin::FeaturesController < ApplicationController
 
   def edit
     @feature = Feature.find(params[:id])
+
+    #@feature_override = FeatureOverride.new
   end
 
   def update

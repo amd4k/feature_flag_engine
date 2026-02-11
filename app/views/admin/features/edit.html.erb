@@ -27,3 +27,60 @@
   </div>  
   
 <% end %>
+
+<hr>
+
+<h2>Feature Overrides</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Target Type</th>
+      <th>Target Identifier</th>
+      <th>Enabled</th>
+      <th></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @feature.feature_overrides.each do |override| %>
+      <tr>
+        <td><%= override.target_type %></td>
+        <td><%= override.target_identifier %></td>
+        <td><%= override.enabled %></td>
+        <td>
+          <%= button_to "Remove", admin_feature_feature_override_path(@feature, override),
+              method: :delete,
+              data: {confirm: "Are you sure you want to remove this override?"} %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<h3>Add Override</h3>
+<%= form_with model: [:admin, @feature, FeatureOverride.new] do |f| %>
+  <div>
+    <%= f.label :target_type %>
+    <br>
+    <%= f.text_field :target_type %>
+  </div>
+
+  <div>
+    <%= f.label :target_identifier %>
+    <br>
+    <%= f.text_field :target_identifier %>
+  </div>
+
+  <div>
+    <%= f.label :enabled %>
+    <%= f.check_box :enabled %>
+  </div>
+
+  <br>
+
+  <div>
+    <%= f.submit "Add Override" %>
+  </div>
+<% end %>
+
